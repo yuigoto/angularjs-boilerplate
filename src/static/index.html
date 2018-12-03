@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Angular Boilerplate</title>
+
+  <link rel="stylesheet" href="./assets/css/build.min.css">
+</head>
+<body id="app" ng-app="app">
+  <!-- APP : START -->
+  <header ng-include="'base.header.html'"></header>
+  <div id="main" ng-view></div>
+  <!-- APP : END -->
+
+  <script src="./assets/js/angular.min.js"></script>
+  <script src="./assets/js/bundle.min.js"></script>
+  <script src="./assets/js/app.min.js"></script>
+</body>
+</html>

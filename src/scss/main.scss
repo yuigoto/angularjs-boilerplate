@@ -1,0 +1,25 @@
+/**
+ * SCSS/Main
+ * --------------------------------------------------------------------
+ * Stylesheet principal.
+ * 
+ * @since   0.0.1
+ */
+
+// Variáveis
+// ----------------------------------------------------------------------
+@import "partials/variables";
+
+// Bibliotecas/Dependências
+// ----------------------------------------------------------------------
+@import "bootstrap-sass/assets/stylesheets/bootstrap.scss";
+@import "owl.carousel/src/scss/owl.carousel.scss";
+@import "font-awesome/scss/font-awesome.scss";
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@import "partials/test";
