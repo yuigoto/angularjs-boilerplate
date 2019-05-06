@@ -1,0 +1,18 @@
+<!--
+  Dnd.Toolbox
+  ----------------------------------------------------------------------
+  A toolbox contém objetos para cópia, que não podem ser movidos.
+
+  Quando um novo elemento é criado/copiado, `dnd-copied` é invocado e nós 
+  geramos o próximo ID do item, visto que o mesmo **DEVE** ser único.
+-->
+<ul>
+  <li ng-repeat="item in $ctrl.blocks" 
+      dnd-draggable="item"
+      dnd-effect-allowed="copy"
+      dnd-copied="item.id = item.id + 1">
+    <button type="button" class="btn">
+      {{item.type}}
+    </button>
+  </li> 
+</ul>

@@ -1,25 +1,26 @@
 /**
- * SCSS/Main
- * --------------------------------------------------------------------
- * Stylesheet principal.
+ * Main
+ * ----------------------------------------------------------------------
+ * Folha de estilo principal.
  * 
- * @since   0.0.1
+ * @author    Fabio Y. Goto <lab@yuiti.com.br>
+ * @sisnce    0.0.1
  */
 
 // Variáveis
 // ----------------------------------------------------------------------
-@import "partials/variables";
+@import "variables";
 
 // Bibliotecas/Dependências
 // ----------------------------------------------------------------------
-@import "bootstrap-sass/assets/stylesheets/bootstrap.scss";
-@import "owl.carousel/src/scss/owl.carousel.scss";
-@import "font-awesome/scss/font-awesome.scss";
+@import "bootstrap/scss/bootstrap.scss";
+@import "@fortawesome/fontawesome-free/scss/fontawesome.scss";
+@import "@fortawesome/fontawesome-free/scss/regular.scss";
+@import "@fortawesome/fontawesome-free/scss/solid.scss";
+@import "@fortawesome/fontawesome-free/scss/brands.scss";
+@import "@fortawesome/fontawesome-free/scss/v4-shims.scss";
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-@import "partials/test";
+// Módulos
+// ----------------------------------------------------------------------
+@import "base";
+@import "dnd";

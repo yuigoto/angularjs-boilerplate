@@ -1,255 +1,178 @@
 /**
  * Gulpfile
  * ----------------------------------------------------------------------
- * Gulp + Tasks = :)
+ * Responsável por definir tarefas e expor para a linha de comando do Gulp, 
+ * para execução de build do projeto.
  * 
+ * @author    Fabio Y. Goto <lab@yuiti.com.br>
  * @since     0.0.1
  */
 
-// Dependências
+// Libs
 const { dest, series, src, parallel, watch } = require("gulp");
-const __if          = require("gulp-if");
-const autoprefixer  = require("gulp-autoprefixer");
-const babel         = require("gulp-babel");
-const concat        = require("gulp-concat");
-const del           = require("del");
-const flatten       = require("gulp-flatten");
-const jshint        = require("gulp-jshint");
-const minify_css    = require("gulp-clean-css");
-const merge         = require("merge2");
-const minimist      = require("minimist");
-const rename        = require("gulp-rename");
-const sass          = require("gulp-sass");
-const shell         = require("gulp-shell");
-const sourcemaps    = require("gulp-sourcemaps");
-const uglify        = require("gulp-uglify");
-const util          = require("gulp-util");
+const __if = require("gulp-if");
+const autoprefixer = require("gulp-autoprefixer");
+const babel = require("gulp-babel");
+const chalk = require("chalk");
+const concat = require("gulp-concat");
+const del = require("del");
+const flatten = require("gulp-flatten");
+const htmlMin = require("gulp-htmlmin");
+const merge = require("merge2");
+const minifyCss = require("gulp-clean-css");
+const minimist = require("minimist");
+const plumber = require("gulp-plumber");
+const rename = require("gulp-rename");
+const replace = require("gulp-replace");
+const sass = require("gulp-sass");
+const shell = require("gulp-shell");
+const sourcemaps = require("gulp-sourcemaps");
+const terser = require("gulp-terser");
+const uglify = require("gulp-uglify");
 
-// Includes
-const params    = require("./gulpfile.params");
+// Imports Locais
+const params = require("./gulpfile.params");
+const globs = require("./gulpfile.path");
 
-// Argumentos de CLI
-const knownCmdLineArgs = minimist(
+/**
+ * Argumentos da linha de comandos processados pelo `minimist`.
+ * 
+ * @type {Object}
+ */
+const cmdArgs = minimist(
   process.argv.slice(2),
   params.plugins.minimist
 );
 
-// É production?
-const isProductionMode = (
-  knownCmdLineArgs.env === "production" 
-  || knownCmdLineArgs.env === "prod"
+/**
+ * Se estamos em ambiente de produção.
+ * 
+ * @type {Boolean}
+ */
+const isProduction = (
+  cmdArgs.env === "production" || cmdArgs.env === "prod"
 );
 
-// Caminhos
+/**
+ * Lista de caminhos para build.
+ * 
+ * @type {Object}
+ */
 const pathList = {
-  root: `${params.path.builds + knownCmdLineArgs.env}/`,
-  assets: `assets/`, 
+  root: `${params.path.builds + cmdArgs.env}/`,
+  assets: `assets/`,
   css: `assets/css/`,
   fonts: `assets/fonts/`,
   img: `assets/img/`,
-  js: `assets/js/`
+  js: `assets/js/`,
 };
 
-// Helpers
-// --------------------------------------------------------------------
+// Pré Build
+// ----------------------------------------------------------------------
 
 /**
- * Lida com mensagens de erro.
- * 
- * `emit()` é opcional, pois quebra os watchers.
- * 
- * @param {*} error 
- */
-const handleErrors = (error) => {
-  console.log(error.toString());
-  // this.emit("end");
-};
-
-// Pre-Build
-// --------------------------------------------------------------------
-
-/**
- * Limpa o build anterior, antes de montar um novo.
+ * Limpa o build anterior.
  * 
  * @returns {*}
  */
-const clean = () => {
-  return del(pathList.root + "**/*");
-};
+const cleanBuild = () => {
+  return del(`${pathList.root}**/*`);
+}
+
+// Dependências
+// ----------------------------------------------------------------------
 
 /**
- * Analisa todos os arquivos JS usando JSHint, exceto dummy files.
+ * Monta bundle com AngularJS e outras dependências relacionadas.
  * 
  * @returns {*}
  */
-const lintJs = () => {
-  return src([
-    `${params.path.source}**/*.js`,
-    `!${params.path.source}**/dummy/**/*.js`
-  ]).pipe(
-    jshint()
-  ).pipe(
-    jshint.reporter("jshint-stylish")
-  );
+const libsAngular = () => {
+  return src(globs.build.libsAngular)
+    .pipe(plumber())
+    .pipe(__if(!isProduction, sourcemaps.init()))
+    .pipe(concat("angular.js"))
+    .pipe(uglify())
+    .pipe(rename(params.plugins.rename.genericFlatten))
+    .pipe(flatten())
+    .pipe(__if(!isProduction, sourcemaps.write(".")))
+    .pipe(dest(pathList.root + pathList.js));
 };
 
-// Library Bundlers
-// --------------------------------------------------------------------
-
 /**
- * Cria um bundle com AngularJS + Bibliotecas.
+ * Monta bundle com jQuery e outras dependências relacionadas.
  * 
  * @returns {*}
  */
-const bundleAngularLibraries = () => {
-  return src([
-    `${params.path.module}angular/angular.min.js`,
-    `${params.path.module}angular-route/angular-route.min.js`,
-    `${params.path.module}angular-i18n/angular-locale_pt-br.js`,
-    `${params.path.module}angular-animate/angular-animate.min.js`,
-    `${params.path.module}angular-cookies/angular-cookies.min.js`,
-    `${params.path.module}angular-filter/dist/angular-filter.min.js`,
-    `${params.path.module}angular-recaptcha/release/angular-recaptcha.min.js`,
-    `${params.path.module}angular-ui-bootstrap/dist/ui-bootstrap.js`
-  ]).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.init())
-  ).pipe(
-    concat("angular.min.js")
-  ).pipe(
-    uglify().on("error", util.log)
-  ).pipe(
-    rename(params.plugins.rename.js.angular)
-  ).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.write("."))
-  ).pipe(
-    dest(pathList.root + pathList.js)
-  );
+const libsJs = () => {
+  return src(globs.build.libsJs)
+    .pipe(plumber())
+    .pipe(__if(!isProduction, sourcemaps.init()))
+    .pipe(concat("bundle.js"))
+    .pipe(uglify())
+    .pipe(rename(params.plugins.rename.genericFlatten))
+    .pipe(flatten())
+    .pipe(__if(!isProduction, sourcemaps.write(".")))
+    .pipe(dest(pathList.root + pathList.js));
 };
 
 /**
- * Cria um bundle com jQuery + Bibliotecas.
+ * Copia assets diversos externos, um tipo em cada tarefa e as agrupa em 
+ * um único stream de dados.
  * 
  * @returns {*}
  */
-const bundleJsLibraries = () => {
-  return src([
-    `${params.path.module}jquery/dist/jquery.min.js`,
-    `${params.path.module}bootstrap-sass/assets/javascripts/bootstrap.min.js`,
-    `${params.path.module}jquery-mask-plugin/dist/jquery.mask.min.js`,
-    `${params.path.module}owl.carousel/dist/owl.carousel.min.js`
-  ]).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.init())
-  ).pipe(
-    concat("bundle.min.js")
-  ).pipe(
-    uglify().on("error", util.log)
-  ).pipe(
-    rename(params.plugins.rename.js.libs)
-  ).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.write("."))
-  ).pipe(
-    dest(pathList.root + pathList.js)
-  );
+const libsAssets = () => {
+  let fonts = src(globs.build.libsFonts)
+    .pipe(plumber())
+    .pipe(flatten())
+    .pipe(dest(pathList.root + pathList.fonts));
+  
+  return merge(fonts);
 };
 
-/**
- * Copia fontes e imagens das bibliotecas.
- * 
- * @returns {*}
- */
-const bundleLibraryAssets = () => {
-  // Fontes
-  let fonts = src([
-    `${params.path.module}bootstrap-sass/assets/fonts/**/*`,
-    `${params.path.module}font-awesome/fonts/**/*webfont*.*`
-  ]).pipe(
-    flatten()
-  ).pipe(
-    dest(pathList.root + pathList.fonts)
-  );
-
-  // Imagens (Owl.Carousel apenas)
-  let image = src([
-    `${params.path.module}owl.carousel/src/img/*`
-  ]).pipe(
-    flatten()
-  ).pipe(
-    dest(pathList.root + pathList.img + "owl.carousel/")
-  );
-
-  return merge(fonts, image);
-};
-
-// Project Bundlers
-// --------------------------------------------------------------------
+// Build
+// ----------------------------------------------------------------------
 
 /**
- * Copia assets do projeto p/ a pasta de build.
+ * Copia assets do projeto.
  * 
  * @returns {*}
  */
 const projectAssets = () => {
-  return src([
-    `${params.path.source}/assets/**/*`
-  ]).pipe(
-    dest(pathList.root + pathList.assets)
-  );
+  return src(globs.build.projectAssets, params.plugins.src.empty)
+    .pipe(plumber())
+    .pipe(dest(pathList.root + pathList.assets));
 };
 
 /**
- * Copia todos os HTML do projeto para a raíz da pasta de build.
+ * Copia todos os arquivos HTML no projeto para a raíz.
  * 
  * @returns {*}
  */
 const projectHtml = () => {
-  return src([
-    `${params.path.source}static/**/*.html`,
-    `!${params.path.source}static/**/dummy/**/*.html`
-  ]).pipe(
-    flatten()
-  ).pipe(
-    dest(pathList.root)
-  );
+  return src(globs.build.projectHtml, params.plugins.src.empty)
+    .pipe(plumber())
+    .pipe(htmlMin(params.plugins.htmlMin))
+    .pipe(flatten())
+    .pipe(dest(pathList.root));
 };
 
 /**
- * Monta um bundle com todos os arquivos JS do projeto.
+ * Monta um bundle com o JavaScript do projeto.
  * 
  * @returns {*}
  */
 const projectJs = () => {
-  return src([
-    `${params.path.source}js/**/*.module.js`, 
-    `${params.path.source}js/**/*.config.js`, 
-    `${params.path.source}js/**/*.routes.js`, 
-    `${params.path.source}js/**/*.component.js`, 
-    `${params.path.source}js/**/*.filter.js`, 
-    `${params.path.source}js/**/*.directive.js`, 
-    `${params.path.source}js/**/*.factory.js`, 
-    `${params.path.source}js/**/*.service.js`, 
-    `${params.path.source}js/**/*.controller.js`, 
-    `${params.path.source}js/app.js`, 
-    `!${params.path.source}js/**/dummy/**/*.js`
-  ]).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.init())
-  ).pipe(
-    concat("app.js")
-  ).pipe(
-    babel({
-      presets: ["@babel/env"]
-    })
-  ).pipe(
-    uglify().on("error", util.log)
-  ).on(
-    "error",
-    handleErrors
-  ).pipe(
-    rename(params.plugins.rename.js.project)
-  ).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.write("."))
-  ).pipe(
-    dest(pathList.root + pathList.js)
-  );
+  return src(globs.build.projectJs, params.plugins.src.empty)
+    .pipe(plumber())
+    .pipe(__if(!isProduction, sourcemaps.init()))
+    .pipe(concat("build.js"))
+    .pipe(babel(params.plugins.babel))
+    .pipe(uglify(params.plugins.uglify))
+    .pipe(rename(params.plugins.rename.genericFlatten))
+    .pipe(__if(!isProduction, sourcemaps.write(".")))
+    .pipe(dest(pathList.root + pathList.js));
 };
 
 /**
@@ -258,146 +181,140 @@ const projectJs = () => {
  * @returns {*}
  */
 const projectScss = () => {
-  return src([
-    `${params.path.source}scss/**/main.scss`
-  ]).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.init())
-  ).pipe(
-    sass(params.plugins.sass).on("error", sass.logError)
-  ).on(
-    "error",
-    handleErrors
-  ).pipe(
-    autoprefixer(params.plugins.autoprefixer)
-  ).pipe(
-    minify_css(params.plugins.cleanCss)
-  ).pipe(
-    rename(params.plugins.rename.scss)
-  ).pipe(
-    __if(knownCmdLineArgs.env === "dev", sourcemaps.write("."))
-  ).pipe(
-    dest(pathList.root + pathList.css)
-  );
+  return src(globs.build.projectScss, params.plugins.src.empty)
+  .pipe(plumber())
+  .pipe(__if(!isProduction, sourcemaps.init()))
+  .pipe(sass(params.plugins.sass))
+  .pipe(autoprefixer(params.plugins.autoprefixer))
+  .pipe(minifyCss(params.plugins.cleanCss))
+  .pipe(rename(params.plugins.rename.buildCss))
+  .pipe(__if(!isProduction, sourcemaps.write(".")))
+  .pipe(dest(pathList.root + pathList.css));
 };
 
-// Watchers
-// --------------------------------------------------------------------
+// Observadores
+// ----------------------------------------------------------------------
 
 /**
- * Observa assets do projeto e copia novas versões quando houver alterações.
+ * Observa assets do projeto.
+ * 
+ * @param {*} cb 
+ *     Callable usado para sinalizar execução de tarefa
  */
-const watchAssets = () => {
-  let watcher = watch([
-    `${params.path.source}/assets/**/*`
-  ]);
+const watchAssets = (cb) => {
+  let watcher = watch(globs.watch.assets);
 
   watcher.on("all", (event, path, stats) => {
-    util.log(
-      "Arquivo: " + path + " | Evento: " + event + " | Copiando assets..."
+    console.log(
+      chalk.red(`File: ${path}`)
+        + "\r\n    "
+        + chalk.gray(`Event: ${event}`)
     );
 
     projectAssets();
   });
+
+  cb();
 };
 
 /**
- * Observa arquivos HTML e copia quando houver alterações.
+ * Observa HTML do projeto.
+ * 
+ * @param {*} cb 
+ *     Callable usado para sinalizar execução de tarefa
  */
-const watchHtml = () => {
-  let watcher = watch([
-    `${params.path.source}static/**/*.html`,
-    `!${params.path.source}static/**/dummy/**/*.html`
-  ]);
+const watchHtml = (cb) => {
+  let watcher = watch(globs.watch.html);
 
   watcher.on("all", (event, path, stats) => {
-    util.log(
-      "Arquivo: " + path + " | Evento: " + event + " | Copiando HTML..."
+    console.log(
+      chalk.green(`File: ${path}`)
+        + "\r\n    "
+        + chalk.gray(`Event: ${event}`)
     );
 
     projectHtml();
   });
+
+  cb();
 };
 
 /**
- * Observa arquivos JS e monta bundle quando houver alterações.
+ * Observa JavaScript do projeto.
+ * 
+ * @param {*} cb 
+ *     Callable usado para sinalizar execução de tarefa
  */
-const watchJs = () => {
-  let watcher = watch([
-    `${params.path.source}js/**/*.module.js`, 
-    `${params.path.source}js/**/*.config.js`, 
-    `${params.path.source}js/**/*.routes.js`, 
-    `${params.path.source}js/**/*.component.js`, 
-    `${params.path.source}js/**/*.filter.js`, 
-    `${params.path.source}js/**/*.directive.js`, 
-    `${params.path.source}js/**/*.factory.js`, 
-    `${params.path.source}js/**/*.service.js`, 
-    `${params.path.source}js/**/*.controller.js`, 
-    `${params.path.source}js/app.js`, 
-    `!${params.path.source}js/**/dummy/**/*.js`
-  ]);
+const watchJs = (cb) => {
+  let watcher = watch(globs.watch.js);
 
   watcher.on("all", (event, path, stats) => {
-    util.log(
-      "Arquivo: " + path + " | Evento: " + event + " | Montando bundle..."
+    console.log(
+      chalk.yellow(`File: ${path}`)
+        + "\r\n    "
+        + chalk.gray(`Event: ${event}`)
     );
 
     projectJs();
   });
+
+  cb();
 };
 
 /**
- * Observa arquivos SCSS e transpila quando houver alterações.
+ * Observa SCSS do projeto.
+ * 
+ * @param {*} cb 
+ *     Callable usado para sinalizar execução de tarefa
  */
-const watchScss = () => {
-  let watcher = watch([
-    `${params.path.source}scss/**/_*.scss`,
-    `${params.path.source}scss/**/*.scss`
-  ]);
+const watchScss = (cb) => {
+  let watcher = watch(globs.watch.scss);
 
   watcher.on("all", (event, path, stats) => {
-    util.log(
-      "Arquivo: " + path + " | Evento: " + event + " | Transpilando SCSS..."
+    console.log(
+      chalk.blue(`File: ${path}`)
+        + "\r\n    "
+        + chalk.gray(`Event: ${event}`)
     );
 
     projectScss();
   });
+
+  cb();
 };
 
-// Tasks
-// --------------------------------------------------------------------
+// Execução
+// ----------------------------------------------------------------------
 
 /**
- * Executa o projeto com `http-server`.
+ * Executa o projeto da pasta de build para o environment atual, usando 
+ * `http-server`, sem hot-reloading.
  * 
+ * @param {*} cb 
+ *     Callable usado para sinalizar execução de tarefa
  * @returns {*}
  */
-const run = () => {
-  return src(
-    pathList.root
-  ).pipe(
-    shell(`http-server -p ${params.port} ${pathList.root}`)
-  );
+const run = (cb) => {
+  cb();
+
+  return src(pathList.root)
+    .pipe(shell(`http-server -p ${params.port} ${pathList.root}`));
 };
 
-/**
- * Limpa + Lint.
- */
-const prebuild = series(
-  clean,
-  lintJs
-);
+// Tarefas Agrupadas
+// ----------------------------------------------------------------------
 
 /**
- * Monta bibliotecas.
+ * Paraleliza bundlers de bibliotecas.
  */
 const libraries = parallel(
-  bundleAngularLibraries,
-  bundleJsLibraries,
-  bundleLibraryAssets
+  libsAngular,
+  libsJs,
+  libsAssets
 );
 
 /**
- * Monta projeto.
+ * Paraleliza bundlers de projeto.
  */
 const project = parallel(
   projectAssets,
@@ -407,10 +324,10 @@ const project = parallel(
 );
 
 /**
- * Monta tudo.
+ * Executa o build completo.
  */
 const compile = series(
-  prebuild,
+  cleanBuild,
   libraries,
   project
 );
@@ -425,14 +342,17 @@ const observe = parallel(
   watchScss
 );
 
-// Exports
-exports.prebuild = prebuild;
+// Tarefas Exportadas
+// ----------------------------------------------------------------------
+
+exports.clean = cleanBuild;
+exports.run = run;
+exports.observe = observe;
 exports.libraries = libraries;
-exports.build = compile;
-exports.watch = observe;
-exports.run = series(compile, run);
+exports.project = project;
+exports.compile = compile;
 exports.default = series(
-  compile, 
+  compile,
   parallel(
     observe, 
     run

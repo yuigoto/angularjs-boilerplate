@@ -1,0 +1,15 @@
+<!--
+  Dnd.Base.Container
+  ----------------------------------------------------------------------
+  O container de base será sempre obrigatório e pré-inicializado.
+-->
+<ul class="dnd-container base" dnd-list="list">
+  <li ng-repeat="item in list" 
+      class="dnd-draggable-item" 
+      dnd-draggable="item" 
+      dnd-effect-allowed="move" 
+      dnd-moved="list.splice($index, 1)"
+      ng-include="'item.' + item.type + '.html'">
+    {{ item }}
+  </li>
+</ul>

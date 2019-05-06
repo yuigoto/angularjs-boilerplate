@@ -15,7 +15,7 @@ _Em breve._
 Requisitos
 ----------
 
-- [**Node.js**](https://nodejs.org) `v8.x+`;
+- [**Node.js**](https://nodejs.org) `v10.x+`;
 
 -----
 

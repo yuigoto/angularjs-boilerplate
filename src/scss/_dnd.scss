@@ -1,0 +1,61 @@
+/**
+ * DND 
+ * ----------------------------------------------------------------------
+ * Define estilos para os componentes de Drag'N Drop.
+ * 
+ * @author    Fabio Y. Goto <lab@yuiti.com.br>
+ * @sisnce    0.0.1
+ */
+
+// Diretiva `dnd-draggable`
+// ----------------------------------------------------------------------
+
+/**
+ * Classe adicionada ao elemento enquanto ele é arrastado, afeta tanto o 
+ * elemento visto ao arrastar, quanto o elemento original.
+ *
+ * NÃO esconda o elemento original com esta class, pois aborta a operação.
+ */
+.dndDragging {
+}
+
+/**
+ * Adicionada ao elemento original quando a operação de "drag" tiver sido 
+ * iniciada.
+ *
+ * Afeta apenas o elemento original.
+ */
+.dndDraggingSource {
+}
+
+// Diretiva `dnd-list`
+// ----------------------------------------------------------------------
+
+/**
+ * Quando um elemento é posicionado sobre uma lista, um "placeholder" será 
+ * adicionado
+ */
+.dndPlaceholder {
+}
+
+.dndDragover {
+}
+
+// Diretiva `dnd-handle`
+// ----------------------------------------------------------------------
+
+/**
+ * RECOMENDAÇÕES:
+ * - Se a sua aplicação tem a ver com mover elementos por drag and drop, é 
+ * recomendável que esconda o elemento "source" enquanto arrasta (ex,: definindo 
+ * `display: none` na classe `.dndDraggingSource`);
+ * - Se a sua aplicação permite que "drope" elementos em listas vazias, você 
+ * precisa se assegurar de que listas nunca terão uma altura ou largura igual 
+ * à zero (ex.: definindo uma largura/altura mínimas);
+ * - Você deve estilizar a classe `dndPlaceholder` corretamente;
+ *
+ * NOTA:
+ * Versões anteriores desta diretiva (`dnd-handle`) precisavam de que fosse 
+ * definido `position: relative` em alguns elementos, porém isso NÃO é mais 
+ * necessário.
+ */
