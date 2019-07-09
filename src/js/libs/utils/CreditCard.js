@@ -258,7 +258,6 @@ class CreditCard {
 
   /**
    * Limpa o valor de cartão recebido e certifica-se de que será uma string.
-   *
    * 
    * @param {String|Number} value 
    *     String ou número do cartão, evite usar números para evitar problemas 
