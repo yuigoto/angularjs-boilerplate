@@ -1,39 +1,36 @@
-AngularJS Boilerplate
-=====================
+# AngularJS Boilerplate
 
 > Boilerplate para projetos usando AngularJS. Possui algumas convenções definidas e outros extras.
 > 
 > Personalize conforme achar melhor! :wink:
 
-Sobre
------
+----------------------------------------------------------------------
 
-_Em breve._
+## Requisitos
 
------
+- [**Node.js**](https://nodejs.org) `v10.x+`
 
-Requisitos
-----------
+----------------------------------------------------------------------
 
-- [**Node.js**](https://nodejs.org) `v10.x+`;
-
------
-
-Executando
-----------
+## Como Usar
 
 Clone o projeto, execute `npm install` na pasta do repositório e, então, execute um destes comandos:
 
-- `npm start`: inicializa o projeto em modo de desenvolvimento;
-- `npm build`: cria um build de produção;
+- `npm start`: inicializa o projeto em modo de desenvolvimento
+- `npm build`: cria um build de produção
 
------
+----------------------------------------------------------------------
 
-Licença
--------
+## Autores
 
-Este projeto está licenciado sob a `Licença MIT`. Mais detalhes sobre a mesma no arquivo `LICENSE.md`, em inglês.
+Veja `AUTHORS.md` para maiores informações.
 
------
+----------------------------------------------------------------------
 
-_©2018 Fabio Y. Goto_
+## Licença
+
+Este projeto está licenciado sob a `MIT License`. Veja o arquivo `LICENSE.md` para maiores detalhes sobre a licença (em inglês).
+
+----------------------------------------------------------------------
+
+_©2018-2020 Fabio Y. Goto_
